@@ -50,11 +50,6 @@
         "title": "Explorer Bookmark Tree: Open Bookmark"
       },
       {
-        "command": "explorerBookmarkTree.openBookmarkStorageFile",
-        "title": "Explorer Bookmark Tree: Open Bookmark Storage",
-        "icon": "$(file-text)"
-      },
-      {
         "command": "explorerBookmarkTree.deleteBookmark",
         "title": "Explorer Bookmark Tree: Remove Bookmark",
         "icon": "$(close)"
@@ -99,13 +94,6 @@
         }
       ],
       "view/title": [
-        {
-          "command": "explorerBookmarkTree.openBookmarkStorageFile",
-          "group": "navigation@0",
-          "when": "view == explorerBookmarkTree",
-          "icon": "$(file-text)",
-          "title": "Explorer Bookmark Tree: Open Bookmark Storage"
-        },
         {
           "command": "explorerBookmarkTree.viewMode.list",
           "group": "navigation@1",
