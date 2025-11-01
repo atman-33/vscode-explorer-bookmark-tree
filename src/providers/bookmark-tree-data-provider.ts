@@ -67,17 +67,19 @@ const resolveParentSegments = (
 	return commonSegments.length > 0 ? commonSegments : undefined;
 };
 
+// biome-ignore lint/nursery/useMaxParams: ignore
 const partitionTreeNodes = (
 	entries: ParsedBookmark[],
 	parentSegments: string[] | undefined,
 	depth: number,
-	openCommandId: string
+	openCommandId: string,
+	shouldExcludeParentFolder: boolean
 ) => {
 	const folderMap = new Map<
 		string,
 		{ label: string; uri: Uri; segments: string[] }
 	>();
-	const leaves: BookmarkTreeItem[] = [];
+	const leafEntries: ParsedBookmark[] = [];
 
 	for (const { entry, uri, segments } of entries) {
 		if (!matchesParent(segments, parentSegments)) {
@@ -98,7 +100,7 @@ const partitionTreeNodes = (
 			continue;
 		}
 
-		leaves.push(new BookmarkTreeItem(entry, openCommandId));
+		leafEntries.push({ entry, uri, segments });
 	}
 
 	const folders = Array.from(folderMap.values())
@@ -107,6 +109,26 @@ const partitionTreeNodes = (
 			(folder) =>
 				new BookmarkFolderTreeItem(folder.label, folder.uri, folder.segments)
 		);
+
+	const leaves = leafEntries
+		.filter(({ entry, segments }) => {
+			if (
+				shouldExcludeParentFolder &&
+				entry.type === "folder" &&
+				parentSegments &&
+				segments.length === depth &&
+				matchesParent(segments, parentSegments)
+			) {
+				return false;
+			}
+
+			if (entry.type === "folder" && folderMap.has(segments.join("/"))) {
+				return false;
+			}
+
+			return true;
+		})
+		.map(({ entry }) => new BookmarkTreeItem(entry, openCommandId));
 
 	const sortedLeaves = leaves.sort((a, b) => {
 		const aLabel = a.label?.toString() ?? "";
@@ -277,12 +299,14 @@ export class BookmarkTreeDataProvider
 
 		const parentSegments = resolveParentSegments(element, commonSegments);
 		const depth = parentSegments ? parentSegments.length : 0;
+		const shouldExcludeParentFolder = element instanceof BookmarkFolderTreeItem;
 
 		const { folders, sortedLeaves } = partitionTreeNodes(
 			parsedEntries,
 			parentSegments,
 			depth,
-			this.openCommandId
+			this.openCommandId,
+			shouldExcludeParentFolder
 		);
 
 		return [...folders, ...sortedLeaves];

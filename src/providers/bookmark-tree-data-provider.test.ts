@@ -226,7 +226,7 @@ describe("BookmarkTreeDataProvider", () => {
 		const repoChildren = provider.getChildren(
 			repoFolder as BookmarkFolderTreeItem
 		);
-		const expectedTopLevelChildren = 3;
+		const expectedTopLevelChildren = 2;
 		expect(repoChildren).toHaveLength(expectedTopLevelChildren);
 
 		const folderNodes = repoChildren.filter(
@@ -239,7 +239,7 @@ describe("BookmarkTreeDataProvider", () => {
 		const leafLabels = repoChildren
 			.filter((child) => child instanceof BookmarkTreeItem)
 			.map((child) => child.label);
-		expect(leafLabels).toContain("docs");
+		expect(leafLabels).toEqual([]);
 
 		const srcNode = folderNodes.find((child) => child.label === "src");
 		const srcChildren = srcNode ? provider.getChildren(srcNode) : [];
@@ -247,6 +247,42 @@ describe("BookmarkTreeDataProvider", () => {
 			.filter((child) => child instanceof BookmarkTreeItem)
 			.map((child) => child.label);
 		expect(srcLeafLabels).toContain("src/index.ts");
+	});
+
+	it("omits folder bookmark when parent folder is already represented", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "src/index.ts",
+				type: "file",
+				uri: "file:///home/atman/repos/atman-prompts/src/index.ts",
+			},
+			{
+				label: "src",
+				type: "folder",
+				uri: "file:///home/atman/repos/atman-prompts/src",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		const topLevel = provider.getChildren();
+		expect(topLevel).toHaveLength(1);
+		const rootFolder = topLevel[0];
+		expect(rootFolder).toBeInstanceOf(BookmarkFolderTreeItem);
+
+		const rootChildren = provider.getChildren(
+			rootFolder as BookmarkFolderTreeItem
+		);
+		const folderLeafLabels = rootChildren
+			.filter((child) => child instanceof BookmarkTreeItem)
+			.map((child) => child.label);
+		expect(folderLeafLabels).toEqual(["src/index.ts"]);
 	});
 
 	it("starts tree mode at the shared ancestor folder", () => {
