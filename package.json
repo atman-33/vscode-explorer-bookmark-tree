@@ -92,14 +92,12 @@
         {
           "command": "explorerBookmarkTree.viewMode.list",
           "group": "navigation@1",
-          "when": "view == explorerBookmarkTree",
-          "toggled": "explorerBookmarkTree:viewMode == 'list'"
+          "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'tree'"
         },
         {
           "command": "explorerBookmarkTree.viewMode.tree",
-          "group": "navigation@2",
-          "when": "view == explorerBookmarkTree",
-          "toggled": "explorerBookmarkTree:viewMode == 'tree'"
+          "group": "navigation@1",
+          "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'list'"
         }
       ]
     },

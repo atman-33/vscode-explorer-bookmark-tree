@@ -1,12 +1,12 @@
 ## ADDED Requirements
 ### Requirement: Toggle Bookmark View Mode
-The BOOKMARK view SHALL expose paired “View as List” and “View as Tree” toolbar commands beside its title so users can switch layouts, defaulting to list mode.
+The BOOKMARK view SHALL expose a single toolbar control beside its title that toggles between “View as List” and “View as Tree”, defaulting to list mode.
 
-#### Scenario: Display view mode buttons
+#### Scenario: Display the alternate mode control
 - **GIVEN** the BOOKMARK view is visible
-- **WHEN** the view header renders
-- **THEN** it SHALL show both “View as List” and “View as Tree” controls
-- **AND** “View as List” SHALL be marked active the first time the user opens the view
+- **WHEN** the view header renders while list mode is active
+- **THEN** it SHALL show a “View as Tree” control and hide “View as List”
+- **AND** when tree mode becomes active the header SHALL instead show “View as List”
 
 #### Scenario: Restore preferred mode
 - **GIVEN** the user previously selected “View as Tree”
