@@ -8,4 +8,4 @@
 ## 2. Validation
 - [x] 2.1 Add unit coverage for the storage helper to confirm add + load flows and URI parsing.
 - [x] 2.2 Exercise the `TreeDataProvider` in tests to ensure it returns the expected items and refreshes after updates.
-- [ ] 2.3 Manually validate in VS Code: add a file and folder bookmark, confirm persistence across reload, and confirm the tree view opens each resource correctly.
+- [x] 2.3 Manually validate in VS Code: add a file and folder bookmark, confirm persistence across reload, and confirm the tree view opens each resource correctly.
