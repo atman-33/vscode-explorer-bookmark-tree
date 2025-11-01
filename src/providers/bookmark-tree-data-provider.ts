@@ -79,6 +79,7 @@ const partitionTreeNodes = (
 		string,
 		{ label: string; uri: Uri; segments: string[] }
 	>();
+	const folderOrder: string[] = [];
 	const leafEntries: ParsedBookmark[] = [];
 
 	for (const { entry, uri, segments } of entries) {
@@ -96,6 +97,7 @@ const partitionTreeNodes = (
 					uri: folderUri,
 					segments: folderSegments,
 				});
+				folderOrder.push(key);
 			}
 			continue;
 		}
@@ -103,12 +105,18 @@ const partitionTreeNodes = (
 		leafEntries.push({ entry, uri, segments });
 	}
 
-	const folders = Array.from(folderMap.values())
-		.sort((a, b) => a.label.localeCompare(b.label))
-		.map(
-			(folder) =>
-				new BookmarkFolderTreeItem(folder.label, folder.uri, folder.segments)
+	const folders = folderOrder.map((key) => {
+		const folder = folderMap.get(key);
+		if (!folder) {
+			throw new Error(`Missing folder for key: ${key}`);
+		}
+
+		return new BookmarkFolderTreeItem(
+			folder.label,
+			folder.uri,
+			folder.segments
 		);
+	});
 
 	const leaves = leafEntries
 		.filter(({ entry, segments }) => {
@@ -130,13 +138,7 @@ const partitionTreeNodes = (
 		})
 		.map(({ entry }) => new BookmarkTreeItem(entry, openCommandId));
 
-	const sortedLeaves = leaves.sort((a, b) => {
-		const aLabel = a.label?.toString() ?? "";
-		const bLabel = b.label?.toString() ?? "";
-		return aLabel.localeCompare(bLabel);
-	});
-
-	return { folders, sortedLeaves };
+	return { folders, leaves };
 };
 
 const matchesParent = (
@@ -301,7 +303,7 @@ export class BookmarkTreeDataProvider
 		const depth = parentSegments ? parentSegments.length : 0;
 		const shouldExcludeParentFolder = element instanceof BookmarkFolderTreeItem;
 
-		const { folders, sortedLeaves } = partitionTreeNodes(
+		const { folders, leaves } = partitionTreeNodes(
 			parsedEntries,
 			parentSegments,
 			depth,
@@ -309,6 +311,8 @@ export class BookmarkTreeDataProvider
 			shouldExcludeParentFolder
 		);
 
-		return [...folders, ...sortedLeaves];
+		return [...folders, ...leaves];
 	};
+
+	getMode = () => this.mode;
 }

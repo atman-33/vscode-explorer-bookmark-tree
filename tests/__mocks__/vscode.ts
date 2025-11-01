@@ -62,6 +62,51 @@ export class TreeItem {
 
 const URI_PARSE_REGEX = /^([a-z0-9+.-]+):(\/\/([^/?#]*))?([^?#]*)/i;
 
+export class DataTransferItem {
+	value: unknown;
+
+	constructor(value: unknown) {
+		this.value = value;
+	}
+
+	asString = () => {
+		if (typeof this.value === "string") {
+			return Promise.resolve(this.value);
+		}
+
+		return Promise.resolve(JSON.stringify(this.value));
+	};
+
+	asFile = () => undefined;
+}
+
+export class DataTransfer implements Iterable<[string, DataTransferItem]> {
+	private readonly entries = new Map<string, DataTransferItem>();
+
+	get = (mimeType: string) => this.entries.get(mimeType.toLowerCase());
+
+	set = (mimeType: string, item: DataTransferItem) => {
+		this.entries.set(mimeType.toLowerCase(), item);
+	};
+
+	forEach = (callback: (item: DataTransferItem, mimeType: string) => void) => {
+		for (const [mime, item] of this.entries) {
+			callback(item, mime);
+		}
+	};
+
+	[Symbol.iterator]() {
+		return this.entries[Symbol.iterator]();
+	}
+}
+
+export const CancellationToken = {
+	None: {
+		isCancellationRequested: false,
+		onCancellationRequested: () => createDisposable(),
+	},
+};
+
 export class Uri {
 	private readonly schemeValue: string;
 	private readonly authorityValue: string;
@@ -131,6 +176,7 @@ export const commands = {
 };
 
 export const window = {
+	createTreeView: () => createDisposable(),
 	registerTreeDataProvider: () => createDisposable(),
 	showInformationMessage: async () => undefined,
 	showWarningMessage: async () => undefined,

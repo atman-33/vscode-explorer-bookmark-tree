@@ -15,6 +15,7 @@ describe("registerDeleteBookmarkCommand", () => {
 		);
 		const store: BookmarkStore = {
 			add: async () => undefined,
+			reorder: async () => undefined,
 			remove: (targetUri: string) => removeMock(targetUri),
 			clear: async () => undefined,
 			getAll: () => [],

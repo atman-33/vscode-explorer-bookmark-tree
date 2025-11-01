@@ -12,6 +12,7 @@ describe("registerClearBookmarksCommand", () => {
 		const clearMock = vi.fn<() => Promise<void>>(async () => undefined);
 		const store: BookmarkStore = {
 			add: async () => undefined,
+			reorder: async () => undefined,
 			remove: async () => undefined,
 			clear: () => clearMock(),
 			getAll: () => [],

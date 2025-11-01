@@ -21,6 +21,37 @@ const createStore = (initial: BookmarkEntry[] = []) => {
 
 			return Promise.resolve();
 		},
+		reorder: (sourceUris, targetUri) => {
+			const moving = entries.filter((entry) => sourceUris.includes(entry.uri));
+			if (moving.length === 0) {
+				return Promise.resolve();
+			}
+
+			const remaining = entries.filter(
+				(entry) => !sourceUris.includes(entry.uri)
+			);
+
+			let targetIndex =
+				targetUri === undefined
+					? remaining.length
+					: remaining.findIndex((entry) => entry.uri === targetUri);
+
+			if (targetIndex < 0) {
+				targetIndex = remaining.length;
+			}
+
+			entries = [
+				...remaining.slice(0, targetIndex),
+				...moving,
+				...remaining.slice(targetIndex),
+			];
+
+			for (const listener of listeners) {
+				listener([...entries]);
+			}
+
+			return Promise.resolve();
+		},
 		remove: (uri) => {
 			entries = entries.filter((entry) => entry.uri !== uri);
 			for (const listener of listeners) {
@@ -190,6 +221,40 @@ describe("BookmarkTreeDataProvider", () => {
 		provider.dispose();
 	});
 
+	it("preserves stored order when rendering list mode", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "third.txt",
+				type: "file",
+				uri: "file:///repo/third.txt",
+			},
+			{
+				label: "first.txt",
+				type: "file",
+				uri: "file:///repo/first.txt",
+			},
+			{
+				label: "second.txt",
+				type: "file",
+				uri: "file:///repo/second.txt",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("list");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		const labels = provider
+			.getChildren()
+			.map((child) => (child as BookmarkTreeItem).label);
+
+		expect(labels).toEqual(entries.map((entry) => entry.label));
+	});
+
 	it("renders hierarchical nodes when tree mode is active", () => {
 		const entries: BookmarkEntry[] = [
 			{
@@ -323,6 +388,41 @@ describe("BookmarkTreeDataProvider", () => {
 			.filter((child) => child instanceof BookmarkTreeItem)
 			.map((child) => child.label);
 		expect(leafLabels).toContain("README.md");
+	});
+
+	it("respects stored order when rendering tree leaves within folders", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "docs/guide.md",
+				type: "file",
+				uri: "file:///repo/docs/guide.md",
+			},
+			{
+				label: "docs/api.md",
+				type: "file",
+				uri: "file:///repo/docs/api.md",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		const topLevel = provider.getChildren();
+		expect(topLevel).toHaveLength(1);
+		const root = topLevel[0] as BookmarkFolderTreeItem;
+		const leaves = provider
+			.getChildren(root)
+			.filter(
+				(child): child is BookmarkTreeItem => child instanceof BookmarkTreeItem
+			)
+			.map((child) => child.label);
+
+		expect(leaves).toEqual(entries.map((entry) => entry.label));
 	});
 
 	it("refreshes when the view mode changes", () => {

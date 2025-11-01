@@ -11,6 +11,10 @@ export interface BookmarkEntry {
 export interface BookmarkStore {
 	readonly getAll: () => BookmarkEntry[];
 	readonly add: (entry: BookmarkEntry) => Promise<void>;
+	readonly reorder: (
+		sourceUris: readonly string[],
+		targetUri: string | undefined
+	) => Promise<void>;
 	readonly remove: (targetUri: string) => Promise<void>;
 	readonly clear: () => Promise<void>;
 	readonly onDidChange: (
@@ -59,6 +63,52 @@ const sanitizeEntries = (value: unknown): BookmarkEntry[] => {
 	return result;
 };
 
+const partitionEntries = (
+	items: BookmarkEntry[],
+	sourceUris: readonly string[]
+) => {
+	const sourceSet = new Set(sourceUris);
+	const moving = items.filter((item) => sourceSet.has(item.uri));
+	const remaining = items.filter((item) => !sourceSet.has(item.uri));
+	return { moving, remaining, sourceSet };
+};
+
+const resolveTargetIndex = (
+	targetUri: string | undefined,
+	remaining: BookmarkEntry[]
+) => {
+	if (!targetUri) {
+		return remaining.length;
+	}
+
+	const index = remaining.findIndex((item) => item.uri === targetUri);
+	return index === -1 ? remaining.length : index;
+};
+
+const insertEntries = (
+	remaining: BookmarkEntry[],
+	moving: BookmarkEntry[],
+	targetIndex: number
+) => [
+	...remaining.slice(0, targetIndex),
+	...moving,
+	...remaining.slice(targetIndex),
+];
+
+const hasOrderChanged = (previous: BookmarkEntry[], next: BookmarkEntry[]) => {
+	if (previous.length !== next.length) {
+		return true;
+	}
+
+	for (let index = 0; index < next.length; index += 1) {
+		if (previous[index]?.uri !== next[index]?.uri) {
+			return true;
+		}
+	}
+
+	return false;
+};
+
 export const createBookmarkStore = (
 	context: ExtensionContext
 ): BookmarkStore => {
@@ -91,6 +141,33 @@ export const createBookmarkStore = (
 
 	const getAll = () => [...entries];
 
+	const reorder = async (
+		sourceUris: readonly string[],
+		targetUri: string | undefined
+	) => {
+		if (sourceUris.length === 0) {
+			return;
+		}
+
+		const { moving, remaining, sourceSet } = partitionEntries(
+			entries,
+			sourceUris
+		);
+		if (moving.length === 0 || (targetUri && sourceSet.has(targetUri))) {
+			return;
+		}
+
+		const targetIndex = resolveTargetIndex(targetUri, remaining);
+		const nextEntries = insertEntries(remaining, moving, targetIndex);
+		if (!hasOrderChanged(entries, nextEntries)) {
+			return;
+		}
+
+		entries = nextEntries;
+		await storage.update(STORAGE_KEY, entries);
+		emitter.fire([...entries]);
+	};
+
 	const onDidChange = (listener: (items: BookmarkEntry[]) => void) =>
 		emitter.event(listener);
 
@@ -106,5 +183,5 @@ export const createBookmarkStore = (
 
 	const dispose = () => emitter.dispose();
 
-	return { add, remove, clear, getAll, onDidChange, dispose };
+	return { add, remove, clear, getAll, reorder, onDidChange, dispose };
 };

@@ -8,6 +8,7 @@ import { registerClearBookmarksCommand } from "./commands/clear-bookmarks";
 import { registerDeleteBookmarkCommand } from "./commands/delete-bookmark";
 import { registerBookmarkViewModeCommands } from "./commands/set-bookmark-view-mode";
 import { BookmarkTreeDataProvider } from "./providers/bookmark-tree-data-provider";
+import { BookmarkTreeDragAndDropController } from "./providers/bookmark-tree-drag-controller";
 
 const TREE_VIEW_ID = "explorerBookmarkTree";
 const OPEN_BOOKMARK_COMMAND_ID = "explorerBookmarkTree.openBookmark";
@@ -32,11 +33,19 @@ export const activate = (context: ExtensionContext) => {
 		OPEN_BOOKMARK_COMMAND_ID,
 		viewModeStore
 	);
+	const dragAndDropController = new BookmarkTreeDragAndDropController(
+		store,
+		treeProvider.getMode
+	);
 	const openCommand = commands.registerCommand(
 		OPEN_BOOKMARK_COMMAND_ID,
 		(resource: Uri, type: BookmarkEntry["type"]) => openBookmark(resource, type)
 	);
 	const viewModeCommands = registerBookmarkViewModeCommands(viewModeStore);
+	const treeView = window.createTreeView(TREE_VIEW_ID, {
+		treeDataProvider: treeProvider,
+		dragAndDropController,
+	});
 
 	context.subscriptions.push(store);
 	context.subscriptions.push(viewModeStore);
@@ -44,11 +53,10 @@ export const activate = (context: ExtensionContext) => {
 	context.subscriptions.push(deleteBookmarkCommand);
 	context.subscriptions.push(clearBookmarksCommand);
 	context.subscriptions.push(treeProvider);
+	context.subscriptions.push(dragAndDropController);
 	context.subscriptions.push(openCommand);
 	context.subscriptions.push(viewModeCommands);
-	context.subscriptions.push(
-		window.registerTreeDataProvider(TREE_VIEW_ID, treeProvider)
-	);
+	context.subscriptions.push(treeView);
 };
 
 // this method is called when your extension is deactivated

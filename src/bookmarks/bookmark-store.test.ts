@@ -137,4 +137,41 @@ describe("createBookmarkStore", () => {
 
 		parseSpy.mockRestore();
 	});
+
+	it("reorders bookmarks, persists updates, and emits change events", async () => {
+		const first = {
+			label: "first.txt",
+			type: "file" as const,
+			uri: "file:///workspace/first.txt",
+		};
+		const second = {
+			label: "second.txt",
+			type: "file" as const,
+			uri: "file:///workspace/second.txt",
+		};
+		const third = {
+			label: "third.txt",
+			type: "file" as const,
+			uri: "file:///workspace/third.txt",
+		};
+
+		const { context, readState } = createMockContext([first, second, third]);
+		const store = createBookmarkStore(context);
+		const listener = vi.fn();
+		store.onDidChange(listener);
+
+		await store.reorder([third.uri], first.uri);
+
+		expect(store.getAll()).toEqual([third, first, second]);
+		expect(readState()).toEqual([third, first, second]);
+		expect(listener).toHaveBeenCalledWith([third, first, second]);
+
+		await store.reorder([first.uri], undefined);
+		expect(store.getAll()).toEqual([third, second, first]);
+		expect(readState()).toEqual([third, second, first]);
+
+		// Ignore requests that attempt to drop onto a dragged item.
+		await store.reorder([third.uri], third.uri);
+		expect(store.getAll()).toEqual([third, second, first]);
+	});
 });
