@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { BookmarkTreeDataProvider } from "./bookmark-tree-data-provider";
-import type { BookmarkTreeItem } from "./bookmark-tree-data-provider";
+import {
+	BookmarkFolderTreeItem,
+	BookmarkTreeDataProvider,
+	BookmarkTreeItem,
+} from "./bookmark-tree-data-provider";
 import type { BookmarkEntry, BookmarkStore } from "../bookmarks/bookmark-store";
+import type { BookmarkViewModeStore } from "../bookmarks/view-mode-store";
 
 const createStore = (initial: BookmarkEntry[] = []) => {
 	let entries = [...initial];
@@ -49,8 +53,49 @@ const createStore = (initial: BookmarkEntry[] = []) => {
 	};
 };
 
+const createViewModeStore = (initial: "list" | "tree" = "list") => {
+	let mode: "list" | "tree" = initial;
+	let listeners: Array<(value: "list" | "tree") => void> = [];
+
+	const store: BookmarkViewModeStore = {
+		getMode: () => mode,
+		setMode: (next) => {
+			if (next === mode) {
+				return Promise.resolve();
+			}
+
+			mode = next;
+			for (const listener of listeners) {
+				listener(mode);
+			}
+			return Promise.resolve();
+		},
+		onDidChange: (listener) => {
+			listeners = [...listeners, listener];
+			return {
+				dispose: () => {
+					listeners = listeners.filter((item) => item !== listener);
+				},
+			};
+		},
+		dispose: () => {
+			listeners = [];
+		},
+	};
+
+	return {
+		store,
+		setMode: (next: "list" | "tree") => {
+			mode = next;
+			for (const listener of listeners) {
+				listener(mode);
+			}
+		},
+	};
+};
+
 describe("BookmarkTreeDataProvider", () => {
-	it("creates tree items with configured command", () => {
+	it("creates tree items with configured command in list mode", () => {
 		const entry: BookmarkEntry = {
 			label: "notes.md",
 			type: "file",
@@ -58,9 +103,11 @@ describe("BookmarkTreeDataProvider", () => {
 		};
 
 		const { store } = createStore([entry]);
+		const { store: viewModeStore } = createViewModeStore("list");
 		const provider = new BookmarkTreeDataProvider(
 			store,
-			"explorerBookmarkTree.openBookmark"
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
 		);
 
 		const children = provider.getChildren();
@@ -85,9 +132,11 @@ describe("BookmarkTreeDataProvider", () => {
 		};
 
 		const { store } = createStore();
+		const { store: viewModeStore } = createViewModeStore("list");
 		const provider = new BookmarkTreeDataProvider(
 			store,
-			"explorerBookmarkTree.openBookmark"
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
 		);
 		const listener = vi.fn();
 
@@ -96,6 +145,88 @@ describe("BookmarkTreeDataProvider", () => {
 
 		expect(listener).toHaveBeenCalledWith(undefined);
 
+		provider.dispose();
+	});
+
+	it("renders hierarchical nodes when tree mode is active", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "src/index.ts",
+				type: "file",
+				uri: "file:///repo/src/index.ts",
+			},
+			{
+				label: "docs",
+				type: "folder",
+				uri: "file:///repo/docs",
+			},
+			{
+				label: "docs/guide.md",
+				type: "file",
+				uri: "file:///repo/docs/guide.md",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		const topLevel = provider.getChildren();
+		expect(topLevel).toHaveLength(1);
+		const repoFolder = topLevel[0];
+		expect(repoFolder).toBeInstanceOf(BookmarkFolderTreeItem);
+		expect(repoFolder.label).toBe("/repo");
+
+		const repoChildren = provider.getChildren(
+			repoFolder as BookmarkFolderTreeItem
+		);
+		const expectedTopLevelChildren = 3;
+		expect(repoChildren).toHaveLength(expectedTopLevelChildren);
+
+		const folderNodes = repoChildren.filter(
+			(child) => child instanceof BookmarkFolderTreeItem
+		) as BookmarkFolderTreeItem[];
+		const folderNames = folderNodes.map((child) => child.label);
+		expect(folderNames).toContain("docs");
+		expect(folderNames).toContain("src");
+
+		const leafLabels = repoChildren
+			.filter((child) => child instanceof BookmarkTreeItem)
+			.map((child) => child.label);
+		expect(leafLabels).toContain("docs");
+
+		const srcNode = folderNodes.find((child) => child.label === "src");
+		const srcChildren = srcNode ? provider.getChildren(srcNode) : [];
+		const srcLeafLabels = srcChildren
+			.filter((child) => child instanceof BookmarkTreeItem)
+			.map((child) => child.label);
+		expect(srcLeafLabels).toContain("src/index.ts");
+	});
+
+	it("refreshes when the view mode changes", () => {
+		const entry: BookmarkEntry = {
+			label: "notes.md",
+			type: "file",
+			uri: "file:///workspace/notes.md",
+		};
+
+		const { store } = createStore([entry]);
+		const { store: viewModeStore, setMode } = createViewModeStore("list");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+		const listener = vi.fn();
+
+		provider.onDidChangeTreeData(listener);
+		setMode("tree");
+
+		expect(listener).toHaveBeenCalledWith(undefined);
 		provider.dispose();
 	});
 });

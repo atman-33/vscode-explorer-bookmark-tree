@@ -5,6 +5,8 @@ import { registerBookmarkExplorerItemCommand } from "./commands/bookmark-explore
 import { registerDeleteBookmarkCommand } from "./commands/delete-bookmark";
 import type { BookmarkEntry } from "./bookmarks/bookmark-store";
 import { BookmarkTreeDataProvider } from "./providers/bookmark-tree-data-provider";
+import { createBookmarkViewModeStore } from "./bookmarks/view-mode-store";
+import { registerBookmarkViewModeCommands } from "./commands/set-bookmark-view-mode";
 
 const TREE_VIEW_ID = "explorerBookmarkTree";
 const OPEN_BOOKMARK_COMMAND_ID = "explorerBookmarkTree.openBookmark";
@@ -20,22 +22,27 @@ const openBookmark = async (resource: Uri, type: BookmarkEntry["type"]) => {
 
 export const activate = (context: ExtensionContext) => {
 	const store = createBookmarkStore(context);
+	const viewModeStore = createBookmarkViewModeStore(context);
 	const bookmarkCommand = registerBookmarkExplorerItemCommand(store);
 	const deleteBookmarkCommand = registerDeleteBookmarkCommand(store);
 	const treeProvider = new BookmarkTreeDataProvider(
 		store,
-		OPEN_BOOKMARK_COMMAND_ID
+		OPEN_BOOKMARK_COMMAND_ID,
+		viewModeStore
 	);
 	const openCommand = commands.registerCommand(
 		OPEN_BOOKMARK_COMMAND_ID,
 		(resource: Uri, type: BookmarkEntry["type"]) => openBookmark(resource, type)
 	);
+	const viewModeCommands = registerBookmarkViewModeCommands(viewModeStore);
 
 	context.subscriptions.push(store);
+	context.subscriptions.push(viewModeStore);
 	context.subscriptions.push(bookmarkCommand);
 	context.subscriptions.push(deleteBookmarkCommand);
 	context.subscriptions.push(treeProvider);
 	context.subscriptions.push(openCommand);
+	context.subscriptions.push(viewModeCommands);
 	context.subscriptions.push(
 		window.registerTreeDataProvider(TREE_VIEW_ID, treeProvider)
 	);

@@ -39,6 +39,7 @@ export class ThemeIcon {
 
 export const TreeItemCollapsibleState = {
 	None: 0,
+	Collapsed: 1,
 } as const;
 
 export type TreeItemCollapsibleStateValue =
@@ -59,35 +60,68 @@ export class TreeItem {
 	}
 }
 
-export class Uri {
-	readonly path: string;
+const URI_PARSE_REGEX = /^([a-z0-9+.-]+):(\/\/([^/?#]*))?([^?#]*)/i;
 
-	constructor(path: string) {
-		this.path = path;
+export class Uri {
+	private readonly schemeValue: string;
+	private readonly authorityValue: string;
+	private readonly pathValue: string;
+
+	private constructor(scheme: string, authority: string, path: string) {
+		this.schemeValue = scheme;
+		this.authorityValue = authority;
+		this.pathValue = path || "/";
 	}
 
 	static parse(value: string) {
-		if (value.length === 0) {
+		if (!value) {
 			throw new Error("Invalid URI");
 		}
 
-		return new Uri(value);
+		const match = value.match(URI_PARSE_REGEX);
+		if (!match) {
+			throw new Error(`Unsupported URI: ${value}`);
+		}
+
+		const [, scheme, , authority = "", path = "/"] = match;
+		return new Uri(scheme, authority, path || "/");
+	}
+
+	with(changes: { scheme?: string; authority?: string; path?: string }) {
+		return new Uri(
+			changes.scheme ?? this.schemeValue,
+			changes.authority ?? this.authorityValue,
+			changes.path ?? this.pathValue
+		);
+	}
+
+	get scheme() {
+		return this.schemeValue;
+	}
+
+	get authority() {
+		return this.authorityValue;
+	}
+
+	get path() {
+		return this.pathValue;
 	}
 
 	get fsPath() {
-		return this.path;
+		return decodeURIComponent(this.pathValue);
 	}
 
 	toString() {
-		return this.path;
+		const authority = this.authorityValue ? `//${this.authorityValue}` : "//";
+		return `${this.schemeValue}:${authority}${this.pathValue}`;
 	}
 
 	toStringWithSkipEncoding() {
-		return this.path;
+		return this.toString();
 	}
 
 	toJSON() {
-		return this.path;
+		return this.toString();
 	}
 }
 

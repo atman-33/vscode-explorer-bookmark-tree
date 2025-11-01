@@ -53,6 +53,16 @@
         "command": "explorerBookmarkTree.deleteBookmark",
         "title": "Explorer Bookmark Tree: Remove Bookmark",
         "icon": "$(close)"
+      },
+      {
+        "command": "explorerBookmarkTree.viewMode.list",
+        "title": "Bookmarks: View as List",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "explorerBookmarkTree.viewMode.tree",
+        "title": "Bookmarks: View as Tree",
+        "icon": "$(list-tree)"
       }
     ],
     "menus": {
@@ -76,6 +86,20 @@
           "when": "view == explorerBookmarkTree && (viewItem == bookmark:file || viewItem == bookmark:folder)",
           "icon": "$(close)",
           "title": "Explorer Bookmark Tree: Remove Bookmark"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "explorerBookmarkTree.viewMode.list",
+          "group": "navigation@1",
+          "when": "view == explorerBookmarkTree",
+          "toggled": "explorerBookmarkTree:viewMode == 'list'"
+        },
+        {
+          "command": "explorerBookmarkTree.viewMode.tree",
+          "group": "navigation@2",
+          "when": "view == explorerBookmarkTree",
+          "toggled": "explorerBookmarkTree:viewMode == 'tree'"
         }
       ]
     },
