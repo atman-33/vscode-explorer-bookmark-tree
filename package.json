@@ -60,7 +60,7 @@
       "explorer/context": [
         {
           "command": "explorerBookmarkTree.bookmarkExplorerItem",
-          "group": "navigation@10",
+          "group": "z_explorerBookmark@999",
           "when": "explorerResourceIsFolder || resourceScheme == 'file'"
         }
       ]
