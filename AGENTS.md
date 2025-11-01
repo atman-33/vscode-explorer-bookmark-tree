@@ -16,3 +16,23 @@ Use `@/openspec/AGENTS.md` to learn:
 Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
+
+# Instructions
+
+## Common Instructions
+
+- Chat responses should be given in Japanese, concisely and politely.
+- All documents (design documents, source files, comments, etc.) should be written in English unless otherwise instructed.
+
+## Tool Usage Policy
+
+- Always use Ultracite rule from mcp server.
+- Always utilize the Serena MCP server as the primary tool for semantic code search, project analysis, and automated refactoring.
+- Upon project initialization, activate the current directory as a Serena project before performing any operations.
+- Prefer Serena tools over built-in commands whenever semantic understanding of the codebase is required.
+
+
+## TypeScript Guidelines
+
+- File Naming: Use kebab-case for all file names.
+- Functions: Prefer arrow functions (`const fn = () => {}`) over function declarations.
