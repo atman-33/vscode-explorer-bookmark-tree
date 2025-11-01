@@ -29,6 +29,14 @@ const createStore = (initial: BookmarkEntry[] = []) => {
 
 			return Promise.resolve();
 		},
+		clear: () => {
+			entries = [];
+			for (const listener of listeners) {
+				listener([]);
+			}
+
+			return Promise.resolve();
+		},
 		onDidChange: (listener) => {
 			listeners = [...listeners, listener];
 			return {
@@ -144,6 +152,40 @@ describe("BookmarkTreeDataProvider", () => {
 		await store.add(entry);
 
 		expect(listener).toHaveBeenCalledWith(undefined);
+
+		provider.dispose();
+	});
+
+	it("renders an empty list after the store clears all bookmarks", async () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "notes.md",
+				type: "file",
+				uri: "file:///workspace/notes.md",
+			},
+			{
+				label: "docs",
+				type: "folder",
+				uri: "file:///workspace/docs",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("list");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+		const listener = vi.fn();
+		provider.onDidChangeTreeData(listener);
+
+		expect(provider.getChildren()).toHaveLength(entries.length);
+
+		await store.clear();
+
+		expect(listener).toHaveBeenCalledWith(undefined);
+		expect(provider.getChildren()).toEqual([]);
 
 		provider.dispose();
 	});

@@ -66,6 +66,33 @@ describe("createBookmarkStore", () => {
 		expect(store.getAll()).toEqual([]);
 	});
 
+	it("clears all bookmarks and emits a single empty update", async () => {
+		const first = {
+			label: "notes.md",
+			type: "file" as const,
+			uri: "file:///workspace/notes.md",
+		};
+		const second = {
+			label: "docs",
+			type: "folder" as const,
+			uri: "file:///workspace/docs",
+		};
+		const { context, readState } = createMockContext([first, second]);
+		const store = createBookmarkStore(context);
+		const listener = vi.fn();
+		store.onDidChange(listener);
+
+		await store.clear();
+
+		expect(store.getAll()).toEqual([]);
+		expect(readState()).toEqual([]);
+		expect(listener).toHaveBeenCalledTimes(1);
+		expect(listener).toHaveBeenCalledWith([]);
+
+		await store.clear();
+		expect(listener).toHaveBeenCalledTimes(1);
+	});
+
 	it("filters out invalid stored entries", () => {
 		const invalidUri = "file:///invalid";
 		const storedValue = [

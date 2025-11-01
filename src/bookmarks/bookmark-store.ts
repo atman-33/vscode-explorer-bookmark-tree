@@ -12,6 +12,7 @@ export interface BookmarkStore {
 	readonly getAll: () => BookmarkEntry[];
 	readonly add: (entry: BookmarkEntry) => Promise<void>;
 	readonly remove: (targetUri: string) => Promise<void>;
+	readonly clear: () => Promise<void>;
 	readonly onDidChange: (
 		listener: (items: BookmarkEntry[]) => void
 	) => Disposable;
@@ -93,7 +94,17 @@ export const createBookmarkStore = (
 	const onDidChange = (listener: (items: BookmarkEntry[]) => void) =>
 		emitter.event(listener);
 
+	const clear = async () => {
+		if (entries.length === 0) {
+			return;
+		}
+
+		entries = [];
+		await storage.update(STORAGE_KEY, entries);
+		emitter.fire([]);
+	};
+
 	const dispose = () => emitter.dispose();
 
-	return { add, remove, getAll, onDidChange, dispose };
+	return { add, remove, clear, getAll, onDidChange, dispose };
 };

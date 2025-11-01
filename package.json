@@ -63,6 +63,11 @@
         "command": "explorerBookmarkTree.viewMode.tree",
         "title": "Bookmarks: View as Tree",
         "icon": "$(list-tree)"
+      },
+      {
+        "command": "explorerBookmarkTree.clearBookmarks",
+        "title": "Bookmarks: Clear All",
+        "icon": "$(clear-all)"
       }
     ],
     "menus": {
@@ -98,6 +103,11 @@
           "command": "explorerBookmarkTree.viewMode.tree",
           "group": "navigation@1",
           "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'list'"
+        },
+        {
+          "command": "explorerBookmarkTree.clearBookmarks",
+          "group": "navigation@2",
+          "when": "view == explorerBookmarkTree"
         }
       ]
     },
