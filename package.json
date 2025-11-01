@@ -1,19 +1,27 @@
 {
-  "name": "vscode-extension-boilerplate",
-  "displayName": "VSCode Extension Boilerplate",
-  "description": "",
+  "name": "explorer-bookmark-tree",
+  "displayName": "Explorer Bookmark Tree",
+  "description": "Bookmark frequently used files and folders and access them from a dedicated Explorer view.",
   "version": "0.1.0",
   "author": "atman-33",
   "publisher": "atman-dev",
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/atman-33/vscode-extension-boilerplate"
+    "url": "https://github.com/atman-33/vscode-explorer-bookmark-tree"
   },
   "engines": {
     "vscode": "^1.84.0"
   },
-  "categories": [],
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "bookmarks",
+    "explorer",
+    "tree",
+    "favorites"
+  ],
   "activationEvents": [],
   "main": "dist/extension.js",
   "extensionKind": [
@@ -40,50 +48,82 @@
     "watch:webview": "npm --prefix webview-ui run dev"
   },
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "vscode-extension-boilerplate",
-          "title": "VSCode Extension Boilerplate",
-          "icon": "./icons/sample.svg"
-        }
-      ]
-    },
     "commands": [
       {
-        "command": "vscode-extension-boilerplate.showInformation",
-        "title": "Boilerplate: Show Information"
+        "command": "explorerBookmarkTree.bookmarkExplorerItem",
+        "title": "Explorer Bookmark Tree: Add Bookmark"
       },
       {
-        "command": "vscode-extension-boilerplate.reverseSelection",
-        "title": "Boilerplate: Reverse Selection"
+        "command": "explorerBookmarkTree.openBookmark",
+        "title": "Explorer Bookmark Tree: Open Bookmark"
+      },
+      {
+        "command": "explorerBookmarkTree.deleteBookmark",
+        "title": "Explorer Bookmark Tree: Remove Bookmark",
+        "icon": "$(close)"
+      },
+      {
+        "command": "explorerBookmarkTree.viewMode.list",
+        "title": "Bookmarks: View as List",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "explorerBookmarkTree.viewMode.tree",
+        "title": "Bookmarks: View as Tree",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "explorerBookmarkTree.clearBookmarks",
+        "title": "Bookmarks: Clear All",
+        "icon": "$(clear-all)"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "vscode-extension-boilerplate.showInformation",
-          "when": "true"
+          "command": "explorerBookmarkTree.bookmarkExplorerItem",
+          "when": "explorerResourceIsFolder || resourceScheme == 'file'"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "explorerBookmarkTree.bookmarkExplorerItem",
+          "group": "z_explorerBookmark@999",
+          "when": "explorerResourceIsFolder || resourceScheme == 'file'"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "explorerBookmarkTree.deleteBookmark",
+          "group": "inline@1",
+          "when": "view == explorerBookmarkTree && (viewItem == bookmark:file || viewItem == bookmark:folder)",
+          "icon": "$(close)",
+          "title": "Explorer Bookmark Tree: Remove Bookmark"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "explorerBookmarkTree.viewMode.list",
+          "group": "navigation@1",
+          "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'tree'"
         },
         {
-          "command": "vscode-extension-boilerplate.reverseSelection",
-          "when": "editorHasSelection"
+          "command": "explorerBookmarkTree.viewMode.tree",
+          "group": "navigation@1",
+          "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'list'"
+        },
+        {
+          "command": "explorerBookmarkTree.clearBookmarks",
+          "group": "navigation@2",
+          "when": "view == explorerBookmarkTree"
         }
       ]
     },
     "views": {
-      "vscode-extension-boilerplate": [
+      "explorer": [
         {
-          "id": "vscode-extension-boilerplate.simpleView",
-          "name": "Simple View",
-          "type": "webview",
-          "icon": ""
-        },
-        {
-          "id": "vscode-extension-boilerplate.interactiveView",
-          "name": "Interactive View",
-          "type": "webview",
-          "icon": ""
+          "id": "explorerBookmarkTree",
+          "name": "Bookmarks"
         }
       ]
     }
