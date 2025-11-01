@@ -40,15 +40,6 @@
     "watch:webview": "npm --prefix webview-ui run dev"
   },
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "explorerBookmarkTreeContainer",
-          "title": "Explorer Bookmark Tree",
-          "icon": "./icons/sample.svg"
-        }
-      ]
-    },
     "commands": [
       {
         "command": "explorerBookmarkTree.bookmarkExplorerItem",
@@ -75,7 +66,7 @@
       ]
     },
     "views": {
-      "explorerBookmarkTreeContainer": [
+      "explorer": [
         {
           "id": "explorerBookmarkTree",
           "name": "Bookmarks",
