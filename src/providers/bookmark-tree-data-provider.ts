@@ -13,8 +13,109 @@ import type {
 } from "../bookmarks/view-mode-store";
 
 export type BookmarkTreeNode = BookmarkTreeItem | BookmarkFolderTreeItem;
+interface ParsedBookmark {
+	entry: BookmarkEntry;
+	segments: string[];
+	uri: Uri;
+}
 
 const toSegments = (uri: Uri) => uri.path.split("/").filter(Boolean);
+
+const findCommonPrefix = (lists: string[][]) => {
+	if (lists.length === 0) {
+		return [];
+	}
+
+	let prefix = [...lists[0]];
+	for (let index = 1; index < lists.length; index += 1) {
+		const current = lists[index];
+		let matched = 0;
+		while (
+			matched < prefix.length &&
+			matched < current.length &&
+			prefix[matched] === current[matched]
+		) {
+			matched += 1;
+		}
+
+		prefix = prefix.slice(0, matched);
+		if (prefix.length === 0) {
+			break;
+		}
+	}
+
+	return prefix;
+};
+
+const createFolderUri = (base: Uri, segments: string[]) =>
+	base.with({ path: `/${segments.join("/")}` });
+
+const shouldCreateRootFolder = (
+	element: BookmarkTreeNode | undefined,
+	commonSegments: string[],
+	count: number
+) => !element && commonSegments.length > 0 && count > 1;
+
+const resolveParentSegments = (
+	element: BookmarkTreeNode | undefined,
+	commonSegments: string[]
+) => {
+	if (element instanceof BookmarkFolderTreeItem) {
+		return element.segments;
+	}
+
+	return commonSegments.length > 0 ? commonSegments : undefined;
+};
+
+const partitionTreeNodes = (
+	entries: ParsedBookmark[],
+	parentSegments: string[] | undefined,
+	depth: number,
+	openCommandId: string
+) => {
+	const folderMap = new Map<
+		string,
+		{ label: string; uri: Uri; segments: string[] }
+	>();
+	const leaves: BookmarkTreeItem[] = [];
+
+	for (const { entry, uri, segments } of entries) {
+		if (!matchesParent(segments, parentSegments)) {
+			continue;
+		}
+
+		if (segments.length > depth + 1) {
+			const folderSegments = segments.slice(0, depth + 1);
+			const key = folderSegments.join("/");
+			if (!folderMap.has(key)) {
+				const folderUri = createFolderUri(uri, folderSegments);
+				folderMap.set(key, {
+					label: createFolderLabel(folderSegments),
+					uri: folderUri,
+					segments: folderSegments,
+				});
+			}
+			continue;
+		}
+
+		leaves.push(new BookmarkTreeItem(entry, openCommandId));
+	}
+
+	const folders = Array.from(folderMap.values())
+		.sort((a, b) => a.label.localeCompare(b.label))
+		.map(
+			(folder) =>
+				new BookmarkFolderTreeItem(folder.label, folder.uri, folder.segments)
+		);
+
+	const sortedLeaves = leaves.sort((a, b) => {
+		const aLabel = a.label?.toString() ?? "";
+		const bLabel = b.label?.toString() ?? "";
+		return aLabel.localeCompare(bLabel);
+	});
+
+	return { folders, sortedLeaves };
+};
 
 const matchesParent = (
 	segments: string[],
@@ -141,61 +242,48 @@ export class BookmarkTreeDataProvider
 	private readonly getTreeChildren = (
 		element?: BookmarkTreeNode
 	): BookmarkTreeNode[] => {
-		const parentSegments =
-			element && element instanceof BookmarkFolderTreeItem
-				? element.segments
-				: undefined;
-		const depth = parentSegments ? parentSegments.length : 0;
-
 		const entries = this.store.getAll();
 		if (entries.length === 0) {
 			return [];
 		}
 
-		const folderMap = new Map<
-			string,
-			{ label: string; uri: Uri; segments: string[] }
-		>();
-		const leaves: BookmarkTreeItem[] = [];
-
-		for (const entry of entries) {
+		const parsedEntries = entries.map((entry): ParsedBookmark => {
 			const uri = Uri.parse(entry.uri);
-			const segments = toSegments(uri);
-			if (!matchesParent(segments, parentSegments)) {
-				continue;
-			}
+			return {
+				entry,
+				uri,
+				segments: toSegments(uri),
+			};
+		});
 
-			if (segments.length > depth + 1) {
-				const folderSegments = segments.slice(0, depth + 1);
-				const key = folderSegments.join("/");
-				if (!folderMap.has(key)) {
-					const folderUri = uri.with({
-						path: `/${folderSegments.join("/")}`,
-					});
-					folderMap.set(key, {
-						label: createFolderLabel(folderSegments),
-						uri: folderUri,
-						segments: folderSegments,
-					});
-				}
-				continue;
-			}
+		const commonSegments = findCommonPrefix(
+			parsedEntries.map((item) =>
+				item.entry.type === "file"
+					? item.segments.slice(0, Math.max(0, item.segments.length - 1))
+					: item.segments
+			)
+		);
 
-			leaves.push(new BookmarkTreeItem(entry, this.openCommandId));
+		if (shouldCreateRootFolder(element, commonSegments, parsedEntries.length)) {
+			const baseUri = createFolderUri(parsedEntries[0].uri, commonSegments);
+			return [
+				new BookmarkFolderTreeItem(
+					createFolderLabel(commonSegments),
+					baseUri,
+					commonSegments
+				),
+			];
 		}
 
-		const folders = Array.from(folderMap.values())
-			.sort((a, b) => a.label.localeCompare(b.label))
-			.map(
-				(folder) =>
-					new BookmarkFolderTreeItem(folder.label, folder.uri, folder.segments)
-			);
+		const parentSegments = resolveParentSegments(element, commonSegments);
+		const depth = parentSegments ? parentSegments.length : 0;
 
-		const sortedLeaves = leaves.sort((a, b) => {
-			const aLabel = a.label?.toString() ?? "";
-			const bLabel = b.label?.toString() ?? "";
-			return aLabel.localeCompare(bLabel);
-		});
+		const { folders, sortedLeaves } = partitionTreeNodes(
+			parsedEntries,
+			parentSegments,
+			depth,
+			this.openCommandId
+		);
 
 		return [...folders, ...sortedLeaves];
 	};

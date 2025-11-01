@@ -207,6 +207,46 @@ describe("BookmarkTreeDataProvider", () => {
 		expect(srcLeafLabels).toContain("src/index.ts");
 	});
 
+	it("starts tree mode at the shared ancestor folder", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "site.ts",
+				type: "file",
+				uri: "file:///home/atman/repos/site.ts",
+			},
+			{
+				label: "README.md",
+				type: "file",
+				uri: "file:///home/atman/README.md",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		const topLevel = provider.getChildren();
+		expect(topLevel).toHaveLength(1);
+		const ancestor = topLevel[0] as BookmarkFolderTreeItem;
+		expect(ancestor.segments).toEqual(["home", "atman"]);
+
+		const ancestorChildren = provider.getChildren(ancestor);
+		const folderNodes = ancestorChildren.filter(
+			(child) => child instanceof BookmarkFolderTreeItem
+		) as BookmarkFolderTreeItem[];
+		const folderLabels = folderNodes.map((child) => child.label);
+		expect(folderLabels).toContain("repos");
+
+		const leafLabels = ancestorChildren
+			.filter((child) => child instanceof BookmarkTreeItem)
+			.map((child) => child.label);
+		expect(leafLabels).toContain("README.md");
+	});
+
 	it("refreshes when the view mode changes", () => {
 		const entry: BookmarkEntry = {
 			label: "notes.md",

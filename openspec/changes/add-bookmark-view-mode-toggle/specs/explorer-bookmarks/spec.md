@@ -15,13 +15,19 @@ The BOOKMARK view SHALL expose a single toolbar control beside its title that to
 - **AND** the view content SHALL render using tree mode without requiring another toggle
 
 ### Requirement: Render Bookmark Tree Mode
-When “View as Tree” is active, the BOOKMARK view SHALL organize bookmarked items into a hierarchical tree whose root nodes represent the highest ancestor folders shared by the saved entries, with expandable folders that reveal their descendants on demand.
+When “View as Tree” is active, the BOOKMARK view SHALL organize bookmarked items into a hierarchical tree whose root nodes represent the highest common ancestor folder shared by the saved entries, with expandable folders that reveal their descendants on demand.
 
 #### Scenario: Compose ancestor-based hierarchy
 - **GIVEN** bookmarks exist for `/repo/src/index.ts` and `/repo/docs/guide.md`
 - **WHEN** “View as Tree” is selected
 - **THEN** the view SHALL surface `/repo/` as the top-level folder node
 - **AND** it SHALL show `src/index.ts` and `docs/guide.md` under the appropriate folder branches
+
+#### Scenario: Trim unrelated root folders
+- **GIVEN** bookmarks exist for `/home/atman/repos/site.ts` and `/home/atman/README.md`
+- **WHEN** “View as Tree” is selected
+- **THEN** the view SHALL surface `/home/atman/` as the top-level folder node
+- **AND** it SHALL omit ancestor folders above `/home/atman/`
 
 #### Scenario: Expand and collapse folders
 - **GIVEN** “View as Tree” is active and a folder node is collapsed
