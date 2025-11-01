@@ -48,6 +48,11 @@
       {
         "command": "explorerBookmarkTree.openBookmark",
         "title": "Explorer Bookmark Tree: Open Bookmark"
+      },
+      {
+        "command": "explorerBookmarkTree.deleteBookmark",
+        "title": "Explorer Bookmark Tree: Remove Bookmark",
+        "icon": "$(close)"
       }
     ],
     "menus": {
@@ -62,6 +67,15 @@
           "command": "explorerBookmarkTree.bookmarkExplorerItem",
           "group": "z_explorerBookmark@999",
           "when": "explorerResourceIsFolder || resourceScheme == 'file'"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "explorerBookmarkTree.deleteBookmark",
+          "group": "inline@1",
+          "when": "view == explorerBookmarkTree && (viewItem == bookmark:file || viewItem == bookmark:folder)",
+          "icon": "$(close)",
+          "title": "Explorer Bookmark Tree: Remove Bookmark"
         }
       ]
     },

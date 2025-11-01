@@ -2,6 +2,7 @@ import { commands, window } from "vscode";
 import type { ExtensionContext, Uri } from "vscode";
 import { createBookmarkStore } from "./bookmarks/bookmark-store";
 import { registerBookmarkExplorerItemCommand } from "./commands/bookmark-explorer-item";
+import { registerDeleteBookmarkCommand } from "./commands/delete-bookmark";
 import type { BookmarkEntry } from "./bookmarks/bookmark-store";
 import { BookmarkTreeDataProvider } from "./providers/bookmark-tree-data-provider";
 
@@ -20,6 +21,7 @@ const openBookmark = async (resource: Uri, type: BookmarkEntry["type"]) => {
 export const activate = (context: ExtensionContext) => {
 	const store = createBookmarkStore(context);
 	const bookmarkCommand = registerBookmarkExplorerItemCommand(store);
+	const deleteBookmarkCommand = registerDeleteBookmarkCommand(store);
 	const treeProvider = new BookmarkTreeDataProvider(
 		store,
 		OPEN_BOOKMARK_COMMAND_ID
@@ -31,6 +33,7 @@ export const activate = (context: ExtensionContext) => {
 
 	context.subscriptions.push(store);
 	context.subscriptions.push(bookmarkCommand);
+	context.subscriptions.push(deleteBookmarkCommand);
 	context.subscriptions.push(treeProvider);
 	context.subscriptions.push(openCommand);
 	context.subscriptions.push(

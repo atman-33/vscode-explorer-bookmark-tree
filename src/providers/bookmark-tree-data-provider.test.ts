@@ -17,6 +17,14 @@ const createStore = (initial: BookmarkEntry[] = []) => {
 
 			return Promise.resolve();
 		},
+		remove: (uri) => {
+			entries = entries.filter((entry) => entry.uri !== uri);
+			for (const listener of listeners) {
+				listener([...entries]);
+			}
+
+			return Promise.resolve();
+		},
 		onDidChange: (listener) => {
 			listeners = [...listeners, listener];
 			return {

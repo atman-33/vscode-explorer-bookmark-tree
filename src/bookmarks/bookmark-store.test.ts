@@ -44,6 +44,28 @@ describe("createBookmarkStore", () => {
 		expect(store.getAll()).toEqual([entry]);
 	});
 
+	it("removes bookmarks and emits updates", async () => {
+		const entry = {
+			label: "notes.md",
+			type: "file" as const,
+			uri: "file:///workspace/notes.md",
+		};
+		const { context, readState } = createMockContext([entry]);
+		const store = createBookmarkStore(context);
+		const listener = vi.fn();
+		store.onDidChange(listener);
+
+		expect(store.getAll()).toEqual([entry]);
+		await store.remove(entry.uri);
+
+		expect(store.getAll()).toEqual([]);
+		expect(readState()).toEqual([]);
+		expect(listener).toHaveBeenCalledWith([]);
+
+		await store.remove(entry.uri);
+		expect(store.getAll()).toEqual([]);
+	});
+
 	it("filters out invalid stored entries", () => {
 		const invalidUri = "file:///invalid";
 		const storedValue = [
