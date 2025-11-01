@@ -54,14 +54,14 @@
       "commandPalette": [
         {
           "command": "explorerBookmarkTree.bookmarkExplorerItem",
-          "when": "explorerResourceIsFolder || explorerResourceIsFile"
+          "when": "explorerResourceIsFolder || resourceScheme == 'file'"
         }
       ],
       "explorer/context": [
         {
           "command": "explorerBookmarkTree.bookmarkExplorerItem",
           "group": "navigation@10",
-          "when": "explorerResourceIsFolder || explorerResourceIsFile"
+          "when": "explorerResourceIsFolder || resourceScheme == 'file'"
         }
       ]
     },
