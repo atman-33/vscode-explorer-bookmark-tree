@@ -2,7 +2,7 @@
   "name": "explorer-bookmark-tree",
   "displayName": "Explorer Bookmark Tree",
   "description": "Bookmark frequently used files and folders and access them from a dedicated Explorer view.",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "atman-33",
   "publisher": "atman-dev",
   "icon": "icon.png",
