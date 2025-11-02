@@ -1,12 +1,12 @@
-import { commands, Disposable, env, Uri, window } from "vscode";
+import { commands, Disposable, env, Uri } from "vscode";
 import type { BookmarkEntry, BookmarkStore } from "../bookmarks/bookmark-store";
 import {
 	BOOKMARK_HAS_BOOKMARKS_CONTEXT_KEY,
 	BOOKMARK_NAMESPACE,
 } from "../constants";
+import { NotificationUtils } from "../utils/notification-utils";
 
 export const COPY_BOOKMARK_PATHS_COMMAND_ID = `${BOOKMARK_NAMESPACE}.copyPaths`;
-const STATUS_MESSAGE_DURATION_MS = 2000;
 
 const applyHasBookmarksContext = async (hasBookmarks: boolean) => {
 	try {
@@ -26,7 +26,7 @@ const handleError = async (error: unknown) => {
 	}
 
 	try {
-		await window.showWarningMessage(error.message);
+		await NotificationUtils.showWarning(error.message);
 	} catch {
 		// Swallow notification failures; warning is best-effort.
 	}
@@ -37,10 +37,7 @@ const toAbsolutePaths = (entries: BookmarkEntry[]) =>
 
 const notifyCopySuccess = (count: number) => {
 	const detail = count === 1 ? "bookmark path" : "bookmark paths";
-	window.setStatusBarMessage(
-		`Copied ${count} ${detail}`,
-		STATUS_MESSAGE_DURATION_MS
-	);
+	NotificationUtils.showInfo(`Copied ${count} ${detail}`);
 };
 
 export const registerCopyBookmarkPathsCommand = (
