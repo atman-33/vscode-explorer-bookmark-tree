@@ -1,7 +1,25 @@
 /** biome-ignore-all lint/nursery/noUselessUndefined: ignore */
-const createDisposable = () => ({ dispose: () => undefined });
+export class Disposable {
+	private readonly disposeFn: () => void;
 
-export type Disposable = ReturnType<typeof createDisposable>;
+	constructor(disposeFn: () => void) {
+		this.disposeFn = disposeFn;
+	}
+
+	dispose() {
+		this.disposeFn();
+	}
+
+	static from(...items: Array<{ dispose: () => void }>) {
+		return new Disposable(() => {
+			for (const item of items) {
+				item.dispose();
+			}
+		});
+	}
+}
+
+const createDisposable = () => new Disposable(() => undefined);
 
 export class EventEmitter<T> {
 	private listeners: Array<(value: T) => void> = [];
@@ -180,10 +198,17 @@ export const window = {
 	registerTreeDataProvider: () => createDisposable(),
 	showInformationMessage: async () => undefined,
 	showWarningMessage: async () => undefined,
+	setStatusBarMessage: () => createDisposable(),
 };
 
 export const workspace = {
 	fs: {
 		stat: async () => ({ type: 0 }),
+	},
+};
+
+export const env = {
+	clipboard: {
+		writeText: async () => undefined,
 	},
 };

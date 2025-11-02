@@ -5,6 +5,7 @@ import type { BookmarkEntry } from "./bookmarks/bookmark-store";
 import { createBookmarkViewModeStore } from "./bookmarks/view-mode-store";
 import { registerBookmarkExplorerItemCommand } from "./commands/bookmark-explorer-item";
 import { registerClearBookmarksCommand } from "./commands/clear-bookmarks";
+import { registerCopyBookmarkPathsCommand } from "./commands/copy-bookmark-paths";
 import { registerDeleteBookmarkCommand } from "./commands/delete-bookmark";
 import { registerBookmarkViewModeCommands } from "./commands/set-bookmark-view-mode";
 import { BookmarkTreeDataProvider } from "./providers/bookmark-tree-data-provider";
@@ -28,6 +29,7 @@ export const activate = (context: ExtensionContext) => {
 	const bookmarkCommand = registerBookmarkExplorerItemCommand(store);
 	const deleteBookmarkCommand = registerDeleteBookmarkCommand(store);
 	const clearBookmarksCommand = registerClearBookmarksCommand(store);
+	const copyBookmarkPathsCommand = registerCopyBookmarkPathsCommand(store);
 	const treeProvider = new BookmarkTreeDataProvider(
 		store,
 		OPEN_BOOKMARK_COMMAND_ID,
@@ -52,6 +54,7 @@ export const activate = (context: ExtensionContext) => {
 	context.subscriptions.push(bookmarkCommand);
 	context.subscriptions.push(deleteBookmarkCommand);
 	context.subscriptions.push(clearBookmarksCommand);
+	context.subscriptions.push(copyBookmarkPathsCommand);
 	context.subscriptions.push(treeProvider);
 	context.subscriptions.push(dragAndDropController);
 	context.subscriptions.push(openCommand);

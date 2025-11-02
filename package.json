@@ -76,6 +76,11 @@
         "command": "explorerBookmarkTree.clearBookmarks",
         "title": "Bookmarks: Clear All",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "explorerBookmarkTree.copyPaths",
+        "title": "Bookmarks: Copy Paths",
+        "icon": "$(clippy)"
       }
     ],
     "menus": {
@@ -103,18 +108,31 @@
       ],
       "view/title": [
         {
+          "command": "explorerBookmarkTree.copyPaths",
+          "group": "navigation@0",
+          "icon": "$(clippy)",
+          "title": "Bookmarks: Copy Paths",
+          "when": "view == explorerBookmarkTree && explorerBookmarkTree:hasBookmarks"
+        },
+        {
           "command": "explorerBookmarkTree.viewMode.list",
           "group": "navigation@1",
+          "icon": "$(list-flat)",
+          "title": "Bookmarks: View as List",
           "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'tree'"
         },
         {
           "command": "explorerBookmarkTree.viewMode.tree",
           "group": "navigation@1",
+          "icon": "$(list-tree)",
+          "title": "Bookmarks: View as Tree",
           "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'list'"
         },
         {
           "command": "explorerBookmarkTree.clearBookmarks",
           "group": "navigation@2",
+          "icon": "$(clear-all)",
+          "title": "Bookmarks: Clear All",
           "when": "view == explorerBookmarkTree"
         }
       ]
