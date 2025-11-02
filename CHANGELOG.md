@@ -2,6 +2,20 @@
 
 ---
 
+## v1.1.0 2025-11-02
+
+### Added
+
+- replace window notifications with NotificationUtils in copy bookmark paths command
+- implement "Copy Paths" command for bookmarks with clipboard functionality
+
+### Changed
+
+- feature/copy-bookmark-paths
+- replace window notifications with NotificationUtils in copy bookmark paths tests
+- add "Copy Paths" button to BOOKMARKS view for copying absolute paths
+- Merge pull request #2 from atman-33/version-bump/v1.0.0
+
 ## v1.0.0 2025-11-01
 
 ### Added
