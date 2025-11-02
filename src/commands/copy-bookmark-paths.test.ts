@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { commands, env, window } from "vscode";
+import { commands, env } from "vscode";
 import type { BookmarkEntry, BookmarkStore } from "../bookmarks/bookmark-store";
 import { BOOKMARK_HAS_BOOKMARKS_CONTEXT_KEY } from "../constants";
+import { NotificationUtils } from "../utils/notification-utils";
 import {
 	COPY_BOOKMARK_PATHS_COMMAND_ID,
 	registerCopyBookmarkPathsCommand,
@@ -84,9 +85,11 @@ describe("registerCopyBookmarkPathsCommand", () => {
 		const clipboardSpy = vi
 			.spyOn(env.clipboard, "writeText")
 			.mockResolvedValue(undefined);
-		const statusSpy = vi
-			.spyOn(window, "setStatusBarMessage")
-			.mockReturnValue({ dispose: vi.fn() });
+		const infoSpy = vi
+			.spyOn(NotificationUtils, "showInfo")
+			.mockImplementation(() => {
+				/* no-op */
+			});
 
 		const disposable = registerCopyBookmarkPathsCommand(store);
 		await Promise.resolve();
@@ -102,10 +105,7 @@ describe("registerCopyBookmarkPathsCommand", () => {
 		expect(clipboardSpy).toHaveBeenCalledWith(
 			"/workspace/src/index.ts\n/workspace/docs"
 		);
-		expect(statusSpy).toHaveBeenCalledWith(
-			expect.stringContaining("Copied 2"),
-			expect.any(Number)
-		);
+		expect(infoSpy).toHaveBeenCalledWith(expect.stringContaining("Copied 2"));
 
 		disposable.dispose();
 		expect(registration.dispose).toHaveBeenCalled();
@@ -186,8 +186,10 @@ describe("registerCopyBookmarkPathsCommand", () => {
 			new Error("clipboard unavailable")
 		);
 		const warningSpy = vi
-			.spyOn(window, "showWarningMessage")
-			.mockResolvedValue(undefined);
+			.spyOn(NotificationUtils, "showWarning")
+			.mockImplementation(() => {
+				/* no-op */
+			});
 
 		registerCopyBookmarkPathsCommand(store);
 		await Promise.resolve();
