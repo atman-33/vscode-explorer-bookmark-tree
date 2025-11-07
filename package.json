@@ -39,7 +39,7 @@
     "lint": "ultracite lint",
     "format": "ultracite format",
     "check": "ultracite check",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "prepare": "husky",

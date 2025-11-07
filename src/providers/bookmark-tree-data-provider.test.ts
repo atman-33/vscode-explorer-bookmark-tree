@@ -447,4 +447,143 @@ describe("BookmarkTreeDataProvider", () => {
 		expect(listener).toHaveBeenCalledWith(undefined);
 		provider.dispose();
 	});
+
+	it("compacts linear folder chains in tree mode", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "webview-ui/src/app.css",
+				type: "file",
+				uri: "file:///repo/webview-ui/src/app.css",
+			},
+			{
+				label: "README.md",
+				type: "file",
+				uri: "file:///repo/README.md",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		const topLevel = provider.getChildren();
+		expect(topLevel).toHaveLength(1);
+		const repoFolder = topLevel[0];
+		expect(repoFolder).toBeInstanceOf(BookmarkFolderTreeItem);
+		expect(repoFolder.label).toBe("/repo");
+
+		const repoChildren = provider.getChildren(
+			repoFolder as BookmarkFolderTreeItem
+		);
+		expect(repoChildren).toHaveLength(2);
+
+		// Find the compacted folder
+		const compactedFolder = repoChildren.find(
+			(child) =>
+				child instanceof BookmarkFolderTreeItem &&
+				child.label === "webview-ui/src"
+		);
+		expect(compactedFolder).toBeDefined();
+		expect(compactedFolder).toBeInstanceOf(BookmarkFolderTreeItem);
+
+		const folderChildren = provider.getChildren(
+			compactedFolder as BookmarkFolderTreeItem
+		);
+		expect(folderChildren).toHaveLength(1);
+
+		const leafNode = folderChildren[0];
+		expect(leafNode).toBeInstanceOf(BookmarkTreeItem);
+		expect(leafNode.label).toBe("webview-ui/src/app.css");
+
+		provider.dispose();
+	});
+	it("does not compact folders when there are multiple branches", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "repo/src/index.ts",
+				type: "file",
+				uri: "file:///repo/src/index.ts",
+			},
+			{
+				label: "repo/docs/guide.md",
+				type: "file",
+				uri: "file:///repo/docs/guide.md",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		const topLevel = provider.getChildren();
+		expect(topLevel).toHaveLength(1);
+		const repoFolder = topLevel[0];
+		expect(repoFolder).toBeInstanceOf(BookmarkFolderTreeItem);
+
+		const repoChildren = provider.getChildren(
+			repoFolder as BookmarkFolderTreeItem
+		);
+		expect(repoChildren).toHaveLength(2);
+
+		const folderNodes = repoChildren.filter(
+			(child) => child instanceof BookmarkFolderTreeItem
+		) as BookmarkFolderTreeItem[];
+		expect(folderNodes).toHaveLength(2);
+
+		const folderLabels = folderNodes.map((child) => child.label);
+		expect(folderLabels).toContain("src");
+		expect(folderLabels).toContain("docs");
+
+		provider.dispose();
+	});
+
+	it("compacts partial folder chains until branches diverge", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "repo/src/components/Button.tsx",
+				type: "file",
+				uri: "file:///workspace/repo/src/components/Button.tsx",
+			},
+			{
+				label: "repo/src/utils/helpers.ts",
+				type: "file",
+				uri: "file:///workspace/repo/src/utils/helpers.ts",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		const topLevel = provider.getChildren();
+		expect(topLevel).toHaveLength(1);
+		const srcFolder = topLevel[0];
+		expect(srcFolder).toBeInstanceOf(BookmarkFolderTreeItem);
+		expect(srcFolder.label).toBe("src");
+
+		const srcChildren = provider.getChildren(
+			srcFolder as BookmarkFolderTreeItem
+		);
+		expect(srcChildren).toHaveLength(2);
+
+		const folderLabels = srcChildren
+			.filter((child) => child instanceof BookmarkFolderTreeItem)
+			.map((child) => child.label);
+		expect(folderLabels).toContain("components");
+		expect(folderLabels).toContain("utils");
+
+		provider.dispose();
+	});
 });
