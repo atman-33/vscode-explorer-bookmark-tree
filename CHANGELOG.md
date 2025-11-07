@@ -2,6 +2,19 @@
 
 ---
 
+## v1.1.1 2025-11-07
+
+### Added
+
+- implement folder compaction for linear folder chains in bookmark tree
+
+### Changed
+
+- feature/bookmarks-tree-layout
+- update test script to explicitly run vitest
+- add proposal, specs, and tasks for compacting empty folder chains in bookmark tree
+- Merge pull request #4 from atman-33/version-bump/v1.1.0
+
 ## v1.1.0 2025-11-02
 
 ### Added
