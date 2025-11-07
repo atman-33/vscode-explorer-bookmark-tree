@@ -67,6 +67,67 @@ const resolveParentSegments = (
 	return commonSegments.length > 0 ? commonSegments : undefined;
 };
 
+// Helper function to check if an entry matches the given folder segments
+const matchesFolderPath = (
+	entrySegments: string[],
+	folderSegments: string[]
+): boolean => {
+	if (entrySegments.length <= folderSegments.length) {
+		return false;
+	}
+
+	for (let i = 0; i < folderSegments.length; i += 1) {
+		if (entrySegments[i] !== folderSegments[i]) {
+			return false;
+		}
+	}
+
+	return true;
+};
+
+// Helper function to detect compactable folder chains
+const detectCompactChain = (
+	folderSegments: string[],
+	allEntries: ParsedBookmark[]
+): string[] => {
+	const compactedSegments = [...folderSegments];
+	let currentDepth = folderSegments.length;
+
+	// Keep extending the chain while there's exactly one child folder and no leaves
+	while (true) {
+		const childFolders = new Set<string>();
+		let hasLeaves = false;
+
+		for (const { segments } of allEntries) {
+			// Check if this entry is a descendant of current folder
+			if (!matchesFolderPath(segments, compactedSegments)) {
+				continue;
+			}
+
+			// If it's exactly at the next depth level, it's either a leaf or a direct child folder
+			if (segments.length === currentDepth + 1) {
+				hasLeaves = true;
+			} else {
+				// It's a descendant, track the immediate child folder
+				const childKey = segments.slice(0, currentDepth + 1).join("/");
+				childFolders.add(childKey);
+			}
+		}
+
+		// Stop if there are multiple child folders or any leaves at this level
+		if (childFolders.size !== 1 || hasLeaves) {
+			break;
+		}
+
+		// Extend the compact chain
+		const singleChild = Array.from(childFolders)[0].split("/");
+		compactedSegments.push(singleChild[currentDepth]);
+		currentDepth += 1;
+	}
+
+	return compactedSegments;
+};
+
 // biome-ignore lint/nursery/useMaxParams: ignore
 const partitionTreeNodes = (
 	entries: ParsedBookmark[],
@@ -77,7 +138,7 @@ const partitionTreeNodes = (
 ) => {
 	const folderMap = new Map<
 		string,
-		{ label: string; uri: Uri; segments: string[] }
+		{ label: string; uri: Uri; segments: string[]; compactedSegments: string[] }
 	>();
 	const folderOrder: string[] = [];
 	const leafEntries: ParsedBookmark[] = [];
@@ -96,6 +157,7 @@ const partitionTreeNodes = (
 					label: createFolderLabel(folderSegments),
 					uri: folderUri,
 					segments: folderSegments,
+					compactedSegments: folderSegments,
 				});
 				folderOrder.push(key);
 			}
@@ -103,6 +165,21 @@ const partitionTreeNodes = (
 		}
 
 		leafEntries.push({ entry, uri, segments });
+	}
+
+	// Detect and apply folder compaction
+	for (const key of folderOrder) {
+		const folder = folderMap.get(key);
+		if (!folder) {
+			continue;
+		}
+
+		const compactedSegments = detectCompactChain(folder.segments, entries);
+		if (compactedSegments.length > folder.segments.length) {
+			folder.compactedSegments = compactedSegments;
+			folder.label = compactedSegments.slice(depth).join("/");
+			folder.uri = createFolderUri(folder.uri, compactedSegments);
+		}
 	}
 
 	const folders = folderOrder.map((key) => {
@@ -114,7 +191,7 @@ const partitionTreeNodes = (
 		return new BookmarkFolderTreeItem(
 			folder.label,
 			folder.uri,
-			folder.segments
+			folder.compactedSegments
 		);
 	});
 
