@@ -27,8 +27,8 @@
 - [x] 5.2 Unit tests for collapse all functionality
 - [x] 5.3 Unit tests for state detection logic
 - [x] 5.4 Integration test for view mode switching
-- [ ] 5.5 Manual testing with nested bookmark structures
+- [x] 5.5 Manual testing with nested bookmark structures
 
 ## Documentation
 - [ ] Update README.md with new expand/collapse feature
-- [ ] Add screenshots showing the toolbar button
+- [x] Add screenshots showing the toolbar button
