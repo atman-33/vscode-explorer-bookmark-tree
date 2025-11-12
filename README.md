@@ -9,6 +9,7 @@ Explorer Bookmark Tree adds a dedicated view to the VS Code Explorer so you can 
 - Bookmark any file or folder directly from the Explorer context menu or a multi-selection.
 - Inspect bookmarks in a dedicated Explorer pane that supports both list and tree layouts.
 - Toggle between list and tree views from the view toolbar without losing the current selection.
+- Expand or collapse the entire tree at once with the dedicated toggle button in tree view.
 - Drag and drop entries to reorder bookmarks when the list layout is active.
 - Open files instantly or reveal bookmarked folders in the Explorer with a single click.
 - Clear the entire bookmark collection when you need to start over.
@@ -18,8 +19,9 @@ Explorer Bookmark Tree adds a dedicated view to the VS Code Explorer so you can 
 1. Open the Explorer view and locate the **Bookmarks** panel provided by the extension.
 2. Right-click any file or folder in the Explorer and choose **Explorer Bookmark Tree: Add Bookmark**. Multi-select is supported.
 3. Switch between **Bookmarks: View as List** and **Bookmarks: View as Tree** using the toolbar icons in the view title.
-4. Click a bookmarked file to open it, or a folder to reveal it in the Explorer. Use drag and drop in list mode to reorder items.
-5. Remove single bookmarks through the inline delete button or clear the entire list with **Bookmarks: Clear All**.
+4. In tree view, use **Bookmarks: Toggle Expand/Collapse** to open or fold every folder in the tree with one click.
+5. Click a bookmarked file to open it, or a folder to reveal it in the Explorer. Use drag and drop in list mode to reorder items.
+6. Remove single bookmarks through the inline delete button or clear the entire list with **Bookmarks: Clear All**.
 
 ## Commands
 
@@ -28,6 +30,9 @@ Explorer Bookmark Tree adds a dedicated view to the VS Code Explorer so you can 
 - `Explorer Bookmark Tree: Remove Bookmark` (`explorerBookmarkTree.deleteBookmark`)
 - `Bookmarks: View as List` (`explorerBookmarkTree.viewMode.list`)
 - `Bookmarks: View as Tree` (`explorerBookmarkTree.viewMode.tree`)
+- `Bookmarks: Toggle Expand/Collapse` (`explorerBookmarkTree.toggleExpandCollapse`)
+- `Bookmarks: Expand All` (`explorerBookmarkTree.expandAllFolders`)
+- `Bookmarks: Collapse All` (`explorerBookmarkTree.collapseAllFolders`)
 - `Bookmarks: Clear All` (`explorerBookmarkTree.clearBookmarks`)
 
 Each command is available from the Command Palette. Context menu entries appear in the Explorer and inside the bookmark view where it makes sense.

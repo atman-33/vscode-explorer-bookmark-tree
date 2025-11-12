@@ -30,5 +30,5 @@
 - [x] 5.5 Manual testing with nested bookmark structures
 
 ## Documentation
-- [ ] Update README.md with new expand/collapse feature
+- [x] Update README.md with new expand/collapse feature
 - [x] Add screenshots showing the toolbar button
