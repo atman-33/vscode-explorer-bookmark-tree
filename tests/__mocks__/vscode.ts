@@ -58,6 +58,7 @@ export class ThemeIcon {
 export const TreeItemCollapsibleState = {
 	None: 0,
 	Collapsed: 1,
+	Expanded: 2,
 } as const;
 
 export type TreeItemCollapsibleStateValue =
