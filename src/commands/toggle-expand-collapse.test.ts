@@ -14,6 +14,8 @@ import {
 	registerToggleExpandCollapseCommand,
 } from "./toggle-expand-collapse";
 
+const MAX_REVEAL_ATTEMPTS = 5;
+
 describe("registerToggleExpandCollapseCommand", () => {
 	const createProvider = (
 		overrides: Partial<BookmarkTreeDataProvider>
@@ -107,6 +109,57 @@ describe("registerToggleExpandCollapseCommand", () => {
 
 		disposable.dispose();
 		expect(registration.dispose).toHaveBeenCalled();
+		registerSpy.mockRestore();
+		executeSpy.mockRestore();
+	});
+
+	it("rejects when revealing a folder fails", async () => {
+		const rootFolder = new BookmarkFolderTreeItem(
+			"/repo",
+			Uri.parse("file:///repo"),
+			["repo"]
+		);
+		const provider = createProvider({
+			getChildren: vi.fn((element?: BookmarkTreeNode) => {
+				if (!element) {
+					return [rootFolder];
+				}
+
+				return [];
+			}),
+		});
+		const revealError = new Error("reveal failed");
+		const treeView: TreeView<BookmarkTreeNode> = {
+			reveal: vi.fn(() => Promise.reject(revealError)),
+		} as unknown as TreeView<BookmarkTreeNode>;
+
+		let handler: (() => Promise<void>) | undefined;
+		const registerSpy = vi
+			.spyOn(commands, "registerCommand")
+			.mockImplementation((identifier, callback) => {
+				expect(identifier).toBe(TOGGLE_EXPAND_COLLAPSE_COMMAND_ID);
+				handler = callback;
+				return { dispose: vi.fn() } as Disposable;
+			});
+
+		const executeSpy = vi
+			.spyOn(commands, "executeCommand")
+			.mockResolvedValue(undefined);
+
+		registerToggleExpandCollapseCommand(provider, treeView);
+		expect(handler).toBeDefined();
+
+		await expect(handler?.()).rejects.toThrow(
+			'Failed to reveal folder "/repo" in the bookmarks tree: reveal failed'
+		);
+		expect(provider.expandAllFolders).toHaveBeenCalledTimes(1);
+		expect(treeView.reveal).toHaveBeenCalledTimes(MAX_REVEAL_ATTEMPTS);
+		expect(commands.executeCommand).not.toHaveBeenCalledWith(
+			"setContext",
+			"explorerBookmarkTree:expandCollapseAction",
+			"collapse"
+		);
+
 		registerSpy.mockRestore();
 		executeSpy.mockRestore();
 	});

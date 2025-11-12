@@ -46,6 +46,7 @@ const revealFolderNode = async (
 	node: BookmarkFolderTreeItem
 ) => {
 	const maxAttempts = 5;
+	let lastError: unknown;
 	for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
 		try {
 			await treeView.reveal(node, {
@@ -53,17 +54,24 @@ const revealFolderNode = async (
 				focus: false,
 				select: false,
 			});
-			return true;
-		} catch {
-			if (attempt === maxAttempts - 1) {
-				break;
+			return;
+		} catch (error) {
+			lastError = error;
+			if (attempt < maxAttempts - 1) {
+				await waitForNextTick();
 			}
-
-			await waitForNextTick();
 		}
 	}
 
-	return false;
+	if (lastError instanceof Error) {
+		throw new Error(
+			`Failed to reveal folder "${node.label}" in the bookmarks tree: ${lastError.message}`
+		);
+	}
+
+	throw new Error(
+		`Failed to reveal folder "${node.label}" in the bookmarks tree after ${maxAttempts} attempts.`
+	);
 };
 
 const expandFolderNodes = async (
@@ -85,7 +93,6 @@ const expandFolderNodes = async (
 		visited.add(nodeId);
 
 		await revealFolderNode(treeView, node);
-
 		const children = treeProvider.getChildren(node);
 		if (children.length > 0) {
 			await expandFolderNodes(treeProvider, treeView, children, visited);

@@ -683,4 +683,54 @@ describe("BookmarkTreeDataProvider", () => {
 
 		provider.dispose();
 	});
+
+	it("resolves parent nodes in tree mode", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "repo/docs/guide.md",
+				type: "file",
+				uri: "file:///repo/docs/guide.md",
+			},
+			{
+				label: "repo/src/utils/index.ts",
+				type: "file",
+				uri: "file:///repo/src/utils/index.ts",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		const [root] = provider.getChildren();
+		expect(root).toBeInstanceOf(BookmarkFolderTreeItem);
+
+		if (!(root instanceof BookmarkFolderTreeItem)) {
+			throw new Error("Missing root folder");
+		}
+
+		const rootChildren = provider.getChildren(root);
+		const compactedFolder = rootChildren.find(
+			(child) =>
+				child instanceof BookmarkFolderTreeItem && child.label === "src/utils"
+		) as BookmarkFolderTreeItem | undefined;
+
+		expect(compactedFolder).toBeInstanceOf(BookmarkFolderTreeItem);
+		expect(provider.getParent(compactedFolder!)).toBe(root);
+
+		const nestedChildren = provider.getChildren(compactedFolder!);
+		const fileNode = nestedChildren.find(
+			(child) => child instanceof BookmarkTreeItem
+		) as BookmarkTreeItem | undefined;
+
+		expect(fileNode).toBeInstanceOf(BookmarkTreeItem);
+		expect(provider.getParent(fileNode!)).toBe(compactedFolder);
+		expect(provider.getParent(root)).toBeUndefined();
+
+		provider.dispose();
+	});
 });

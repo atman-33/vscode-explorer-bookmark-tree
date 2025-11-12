@@ -25,6 +25,11 @@ interface FolderNodeDescriptor {
 	segments: string[];
 }
 
+interface TreeContext {
+	parsedEntries: ParsedBookmark[];
+	commonSegments: string[];
+}
+
 const toSegments = (uri: Uri) => uri.path.split("/").filter(Boolean);
 
 const findCommonPrefix = (lists: string[][]) => {
@@ -346,6 +351,63 @@ export class BookmarkTreeDataProvider
 		return this.getTreeChildren(element);
 	};
 
+	getParent = (element: BookmarkTreeNode) => {
+		if (this.mode !== "tree") {
+			return;
+		}
+
+		const context = this.getTreeContext();
+		if (!context) {
+			return;
+		}
+
+		const { parsedEntries, commonSegments } = context;
+		const hasRoot = shouldCreateRootFolder(
+			undefined,
+			commonSegments,
+			parsedEntries.length
+		);
+
+		if (
+			element instanceof BookmarkFolderTreeItem &&
+			commonSegments.length > 0 &&
+			this.areSegmentsEqual(element.segments, commonSegments) &&
+			hasRoot
+		) {
+			return;
+		}
+
+		if (element instanceof BookmarkFolderTreeItem) {
+			const parentFolder = this.findClosestAncestorFolder(
+				element.segments,
+				context
+			);
+			return parentFolder;
+		}
+
+		if (element instanceof BookmarkTreeItem) {
+			const uri = Uri.parse(element.bookmark.uri);
+			const entrySegments = toSegments(uri);
+			const parentPath = entrySegments.slice(0, -1);
+
+			if (parentPath.length === 0) {
+				if (hasRoot) {
+					return this.getRootFolderItem(context);
+				}
+				return;
+			}
+
+			const directParent = this.findFolderByExactSegments(parentPath, context);
+			if (directParent) {
+				return directParent;
+			}
+
+			return this.findClosestAncestorFolder(parentPath, context);
+		}
+
+		return;
+	};
+
 	dispose = () => {
 		this.storeSubscription.dispose();
 		this.viewModeSubscription.dispose();
@@ -499,7 +561,7 @@ export class BookmarkTreeDataProvider
 		return [...folderItems, ...leaves];
 	};
 
-	private readonly getTreeContext = () => {
+	private readonly getTreeContext = (): TreeContext | undefined => {
 		const entries = this.store.getAll();
 		if (entries.length === 0) {
 			return;
@@ -525,8 +587,8 @@ export class BookmarkTreeDataProvider
 		return { parsedEntries, commonSegments };
 	};
 
-	private readonly collectFolderIds = () => {
-		const context = this.getTreeContext();
+	private readonly collectFolderIds = (suppliedContext?: TreeContext) => {
+		const context = suppliedContext ?? this.getTreeContext();
 		if (!context) {
 			return new Set<string>();
 		}
@@ -571,6 +633,83 @@ export class BookmarkTreeDataProvider
 
 		visit(undefined);
 		return folderIds;
+	};
+
+	private readonly getRootFolderItem = (
+		context: TreeContext
+	): BookmarkFolderTreeItem | undefined => {
+		const { parsedEntries, commonSegments } = context;
+		if (
+			commonSegments.length === 0 ||
+			parsedEntries.length === 0 ||
+			!shouldCreateRootFolder(undefined, commonSegments, parsedEntries.length)
+		) {
+			return;
+		}
+
+		const baseUri = createFolderUri(parsedEntries[0].uri, commonSegments);
+		const root = this.getOrCreateFolderItem({
+			label: createFolderLabel(commonSegments),
+			segments: commonSegments,
+			uri: baseUri,
+		});
+		this.applyCollapsibleState(root);
+		return root;
+	};
+
+	private readonly findFolderByExactSegments = (
+		segments: readonly string[],
+		context: TreeContext
+	): BookmarkFolderTreeItem | undefined => {
+		this.collectFolderIds(context);
+		for (const folder of this.folderItemCache.values()) {
+			if (this.areSegmentsEqual(folder.segments, segments)) {
+				this.applyCollapsibleState(folder);
+				return folder;
+			}
+		}
+
+		return;
+	};
+
+	private readonly findClosestAncestorFolder = (
+		childSegments: readonly string[],
+		context: TreeContext
+	): BookmarkFolderTreeItem | undefined => {
+		this.collectFolderIds(context);
+		let candidate: BookmarkFolderTreeItem | undefined;
+		for (const folder of this.folderItemCache.values()) {
+			if (!this.isSegmentPrefix(folder.segments, childSegments)) {
+				continue;
+			}
+
+			if (!candidate || folder.segments.length > candidate.segments.length) {
+				candidate = folder;
+			}
+		}
+
+		if (candidate) {
+			this.applyCollapsibleState(candidate);
+		}
+
+		return candidate;
+	};
+
+	private readonly isSegmentPrefix = (
+		prefix: readonly string[],
+		target: readonly string[]
+	) => {
+		if (prefix.length >= target.length) {
+			return false;
+		}
+
+		for (let index = 0; index < prefix.length; index += 1) {
+			if (prefix[index] !== target[index]) {
+				return false;
+			}
+		}
+
+		return true;
 	};
 
 	private readonly pruneExpandedFolders = () => {
