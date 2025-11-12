@@ -73,6 +73,20 @@
         "icon": "$(list-tree)"
       },
       {
+        "command": "explorerBookmarkTree.toggleExpandCollapse",
+        "title": "Bookmarks: Toggle Expand/Collapse"
+      },
+      {
+        "command": "explorerBookmarkTree.expandAllFolders",
+        "title": "Bookmarks: Expand All",
+        "icon": "$(expand-all)"
+      },
+      {
+        "command": "explorerBookmarkTree.collapseAllFolders",
+        "title": "Bookmarks: Collapse All",
+        "icon": "$(collapse-all)"
+      },
+      {
         "command": "explorerBookmarkTree.clearBookmarks",
         "title": "Bookmarks: Clear All",
         "icon": "$(clear-all)"
@@ -127,6 +141,18 @@
           "icon": "$(list-tree)",
           "title": "Bookmarks: View as Tree",
           "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'list'"
+        },
+        {
+          "command": "explorerBookmarkTree.expandAllFolders",
+          "group": "navigation@1",
+          "icon": "$(expand-all)",
+          "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'tree' && explorerBookmarkTree:expandCollapseAction == 'expand'"
+        },
+        {
+          "command": "explorerBookmarkTree.collapseAllFolders",
+          "group": "navigation@1",
+          "icon": "$(collapse-all)",
+          "when": "view == explorerBookmarkTree && explorerBookmarkTree:viewMode == 'tree' && explorerBookmarkTree:expandCollapseAction == 'collapse'"
         },
         {
           "command": "explorerBookmarkTree.clearBookmarks",

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { TreeItemCollapsibleState } from "vscode";
 import {
 	BookmarkFolderTreeItem,
 	BookmarkTreeDataProvider,
@@ -583,6 +584,102 @@ describe("BookmarkTreeDataProvider", () => {
 			.map((child) => child.label);
 		expect(folderLabels).toContain("components");
 		expect(folderLabels).toContain("utils");
+
+		provider.dispose();
+	});
+
+	it("expands and collapses all folders via the provider", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "repo/docs/guide.md",
+				type: "file",
+				uri: "file:///repo/docs/guide.md",
+			},
+			{
+				label: "repo/src/index.ts",
+				type: "file",
+				uri: "file:///repo/src/index.ts",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+
+		provider.expandAllFolders();
+		const [root] = provider.getChildren();
+		expect(root).toBeInstanceOf(BookmarkFolderTreeItem);
+		expect((root as BookmarkFolderTreeItem).collapsibleState).toBe(
+			TreeItemCollapsibleState.Expanded
+		);
+
+		provider.collapseAllFolders();
+		const [collapsedRoot] = provider.getChildren();
+		expect(collapsedRoot).toBeInstanceOf(BookmarkFolderTreeItem);
+		expect((collapsedRoot as BookmarkFolderTreeItem).collapsibleState).toBe(
+			TreeItemCollapsibleState.Collapsed
+		);
+
+		provider.dispose();
+	});
+
+	it("tracks manual folder expansion state", () => {
+		const entries: BookmarkEntry[] = [
+			{
+				label: "repo/src/components/Button.tsx",
+				type: "file",
+				uri: "file:///repo/src/components/Button.tsx",
+			},
+			{
+				label: "repo/src/utils/helpers.ts",
+				type: "file",
+				uri: "file:///repo/src/utils/helpers.ts",
+			},
+		];
+
+		const { store } = createStore(entries);
+		const { store: viewModeStore, setMode } = createViewModeStore("tree");
+		const provider = new BookmarkTreeDataProvider(
+			store,
+			"explorerBookmarkTree.openBookmark",
+			viewModeStore
+		);
+		const [root] = provider.getChildren();
+		expect(root).toBeInstanceOf(BookmarkFolderTreeItem);
+
+		if (root instanceof BookmarkFolderTreeItem) {
+			provider.markFolderExpanded(root);
+		}
+
+		let state = provider.getFolderExpansionState();
+		expect(state).toEqual({
+			hasFolders: true,
+			anyExpanded: true,
+			allCollapsed: false,
+		});
+
+		if (root instanceof BookmarkFolderTreeItem) {
+			provider.markFolderCollapsed(root);
+		}
+
+		state = provider.getFolderExpansionState();
+		expect(state).toEqual({
+			hasFolders: true,
+			anyExpanded: false,
+			allCollapsed: true,
+		});
+
+		setMode("list");
+		state = provider.getFolderExpansionState();
+		expect(state).toEqual({
+			hasFolders: false,
+			anyExpanded: false,
+			allCollapsed: true,
+		});
 
 		provider.dispose();
 	});
