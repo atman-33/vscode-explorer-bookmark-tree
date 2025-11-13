@@ -2,6 +2,27 @@
 
 ---
 
+## v1.2.0 2025-11-13
+
+### Added
+
+- enhance folder revealing logic with error handling and parent node resolution
+- add expand/collapse functionality for bookmark tree and related commands
+
+### Changed
+
+- Merge pull request #10 from atman-33/copilot/add-clear-all-confirmation-prompt
+- mark clear-all confirmation tasks as complete
+- Add confirmation dialog to Clear All command
+- Start work on clear-all confirmation feature
+- Initial plan
+- add confirmation prompt for "Clear All" action in bookmarks view to prevent accidental data loss
+- feature/expand-bookmarks-tree
+- update README to include expand/collapse feature for bookmark tree
+- complete manual testing for nested bookmark structures and update documentation with toolbar button screenshots
+- Merge pull request #6 from atman-33/version-bump/v1.1.1
+- add expand/collapse all folders functionality in bookmarks view
+
 ## v1.1.1 2025-11-07
 
 ### Added
