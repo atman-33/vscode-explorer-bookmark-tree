@@ -26,6 +26,9 @@ const createStore = (initial: BookmarkEntry[] = []) => {
 		clear: async () => {
 			/* no-op for tests */
 		},
+		refresh: () => {
+			/* no-op for tests */
+		},
 		onDidChange: (callback) => {
 			listener = callback;
 			return {

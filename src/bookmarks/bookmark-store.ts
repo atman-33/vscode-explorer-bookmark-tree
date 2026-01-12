@@ -17,6 +17,7 @@ export interface BookmarkStore {
 	) => Promise<void>;
 	readonly remove: (targetUri: string) => Promise<void>;
 	readonly clear: () => Promise<void>;
+	readonly refresh: () => void;
 	readonly onDidChange: (
 		listener: (items: BookmarkEntry[]) => void
 	) => Disposable;
@@ -181,7 +182,17 @@ export const createBookmarkStore = (
 		emitter.fire([]);
 	};
 
+	const refresh = () => {
+		const nextEntries = sanitizeEntries(storage.get(STORAGE_KEY));
+		if (!hasOrderChanged(entries, nextEntries)) {
+			return;
+		}
+
+		entries = nextEntries;
+		emitter.fire([...entries]);
+	};
+
 	const dispose = () => emitter.dispose();
 
-	return { add, remove, clear, getAll, reorder, onDidChange, dispose };
+	return { add, remove, clear, getAll, reorder, refresh, onDidChange, dispose };
 };

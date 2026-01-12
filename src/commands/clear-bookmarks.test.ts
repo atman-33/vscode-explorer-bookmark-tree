@@ -16,6 +16,7 @@ describe("registerClearBookmarksCommand", () => {
 			remove: async () => undefined,
 			clear: () => clearMock(),
 			getAll: () => [],
+			refresh: () => undefined,
 			onDidChange: () => ({ dispose: () => undefined }),
 			dispose: () => undefined,
 		};
@@ -62,6 +63,7 @@ describe("registerClearBookmarksCommand", () => {
 			remove: async () => undefined,
 			clear: () => clearMock(),
 			getAll: () => [],
+			refresh: () => undefined,
 			onDidChange: () => ({ dispose: () => undefined }),
 			dispose: () => undefined,
 		};

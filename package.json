@@ -95,6 +95,11 @@
         "command": "explorerBookmarkTree.copyPaths",
         "title": "Bookmarks: Copy Paths",
         "icon": "$(clippy)"
+      },
+      {
+        "command": "explorerBookmarkTree.refreshBookmarks",
+        "title": "Bookmarks: Refresh",
+        "icon": "$(refresh)"
       }
     ],
     "menus": {
@@ -159,6 +164,13 @@
           "group": "navigation@2",
           "icon": "$(clear-all)",
           "title": "Bookmarks: Clear All",
+          "when": "view == explorerBookmarkTree"
+        },
+        {
+          "command": "explorerBookmarkTree.refreshBookmarks",
+          "group": "navigation@3",
+          "icon": "$(refresh)",
+          "title": "Bookmarks: Refresh",
           "when": "view == explorerBookmarkTree"
         }
       ]
