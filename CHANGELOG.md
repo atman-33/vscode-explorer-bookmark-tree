@@ -2,6 +2,20 @@
 
 ---
 
+## v1.3.0 2026-01-12
+
+### Added
+
+- add Serena MCP Development Guidelines and WSL environment handling instructions
+- add refresh functionality to bookmarks view and update related specs and tests
+- add OpenSpec command prompts for proposal, apply, and archive stages
+
+### Changed
+
+- feature/add-reload-tree
+- add daily task creator skill and script for automated task file generation
+- Merge pull request #11 from atman-33/version-bump/v1.2.0
+
 ## v1.2.0 2025-11-13
 
 ### Added
