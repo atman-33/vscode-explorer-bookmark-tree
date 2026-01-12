@@ -21,6 +21,7 @@ const createStore = () => {
 		reorder,
 		remove: async () => undefined,
 		clear: async () => undefined,
+		refresh: () => undefined,
 		onDidChange: () => ({ dispose: () => undefined }),
 		dispose: () => undefined,
 	};

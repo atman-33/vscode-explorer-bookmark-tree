@@ -16,6 +16,7 @@ describe("registerClearBookmarksCommand", () => {
 			remove: async () => undefined,
 			clear: () => clearMock(),
 			getAll: () => [],
+			refresh: () => undefined,
 			onDidChange: () => ({ dispose: () => undefined }),
 			dispose: () => undefined,
 		};
@@ -23,7 +24,7 @@ describe("registerClearBookmarksCommand", () => {
 		// Mock the confirmation dialog to simulate user clicking "Yes"
 		const showWarningMessageSpy = vi
 			.spyOn(window, "showWarningMessage")
-			.mockResolvedValue("Yes");
+			.mockResolvedValue("Yes" as any);
 
 		let registeredHandler: (() => Promise<void>) | undefined;
 		const registration = { dispose: vi.fn() };
@@ -62,6 +63,7 @@ describe("registerClearBookmarksCommand", () => {
 			remove: async () => undefined,
 			clear: () => clearMock(),
 			getAll: () => [],
+			refresh: () => undefined,
 			onDidChange: () => ({ dispose: () => undefined }),
 			dispose: () => undefined,
 		};

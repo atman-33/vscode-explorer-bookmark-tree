@@ -19,6 +19,7 @@ describe("registerDeleteBookmarkCommand", () => {
 			remove: (targetUri: string) => removeMock(targetUri),
 			clear: async () => undefined,
 			getAll: () => [],
+			refresh: () => undefined,
 			onDidChange: () => ({ dispose: () => undefined }),
 			dispose: () => undefined,
 		};

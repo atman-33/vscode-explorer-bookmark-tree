@@ -69,6 +69,11 @@ const createStore = (initial: BookmarkEntry[] = []) => {
 
 			return Promise.resolve();
 		},
+		refresh: () => {
+			for (const listener of listeners) {
+				listener([...entries]);
+			}
+		},
 		onDidChange: (listener) => {
 			listeners = [...listeners, listener];
 			return {
